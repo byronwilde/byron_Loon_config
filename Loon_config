@@ -1,0 +1,107 @@
+# =====================================================
+# Loon — 精简高效配置（手动单节点控制，全局策略，隐私强化版）
+# 作者：ChatGPT GPT-5 Thinking mini
+# 目标：最少规则匹配 / 最高性能 / 最强隐私 —— 中国直连，境外走代理（手动选择单节点）
+# 更新时间：2025-10-26
+# =====================================================
+
+[General]
+ip-mode = ipv4
+ipv6-vif = auto
+# 使用加密 DNS，防止 DNS 泄漏
+dns-server = 1.1.1.1
+doh-server = https://cloudflare-dns.com/dns-query
+doq-server = quic://dns.cloudflare.com:853
+test-timeout = 5
+interface-mode = auto
+domain-reject-mode = DNS
+dns-reject-mode = LoopbackIP
+sni-sniffing = false
+udp-fallback-mode = REJECT
+disable-stun = true
+disconnect-on-policy-change = false
+switch-node-after-failure-times = 2
+internet-test-url = http://connectivitycheck.platform.hicloud.com/generate_204
+proxy-test-url = http://www.google.com/blank.html
+skip-proxy = 192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local
+bypass-tun = 10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.168.0.0/16,224.0.0.0/4
+allow-wifi-access = false
+wifi-access-http-port = 7222
+wifi-access-socks5-port = 7221
+mitm-on-wifi-access = false
+
+# =====================================================
+# 节点区（仅通过订阅管理节点）
+# 使用说明：直接在下方粘贴你的订阅 URL，保存后刷新订阅即可。
+# =====================================================
+[Remote Proxy]
+# 示例订阅（请替换为你自己的订阅链接）
+🌏 全部节点 = https://910.ts361.cc/weibo/ipo/client/dy?token=c16cc4f752281e2fbe4d508e0de30d4d
+
+# 提示：粘贴后进入 Loon App → 配置 → 订阅管理 → 刷新订阅，即可在节点组中看到解析出的节点。
+
+# =====================================================
+# 策略组（单一手动选择组）
+# =====================================================
+[Proxy Group]
+🚀 节点选择 = select,🌏 全部节点,DIRECT
+Available = select,🚀 节点选择,DIRECT
+
+# =====================================================
+# 规则区（极简优先级：局域网 → 中国直连 → 白名单 → 广告拒绝 → 保底）
+# =====================================================
+[Rule]
+# 局域网与保留地址
+IP-CIDR,10.0.0.0/8,DIRECT
+IP-CIDR,127.0.0.0/8,DIRECT
+IP-CIDR,172.16.0.0/12,DIRECT
+IP-CIDR,192.168.0.0/16,DIRECT
+
+# 中国大陆 IP（GeoIP）
+GEOIP,cn,DIRECT
+
+# 苹果服务白名单
+DOMAIN-SUFFIX,apple.com,DIRECT
+DOMAIN-SUFFIX,icloud.com,DIRECT
+DOMAIN-SUFFIX,icloud-content.com,DIRECT
+DOMAIN-SUFFIX,push.apple.com,DIRECT
+IP-CIDR,17.0.0.0/8,DIRECT
+
+# 广告与追踪类屏蔽
+DOMAIN-KEYWORD,ad,REJECT
+DOMAIN-KEYWORD,tracking,REJECT
+DOMAIN-KEYWORD,analytics,REJECT
+
+# 最后一条保底：非中国流量走手动选择节点
+FINAL,🚀 节点选择
+
+# =====================================================
+# Host（国内加速）
+# =====================================================
+[Host]
+*.taobao.com = server:223.5.5.5
+*.jd.com = server:119.28.28.28
+*.bilibili.com = server:119.29.29.29
+
+# =====================================================
+# 插件区（仅保留必要与安全相关插件）
+# =====================================================
+[Plugin]
+Prevent_DNS_Leaks = https://raw.githubusercontent.com/sooyaaabo/Loon/main/Plugin/Prevent_DNS_Leaks.plugin, enabled=true
+Node_detection_tool = https://raw.githubusercontent.com/sooyaaabo/Loon/main/Plugin/Node_detection_tool.plugin, enabled=true
+
+# =====================================================
+# MitM（不启用 HTTPS 解密）
+# =====================================================
+[Mitm]
+enable = false
+skip-server-cert-verify = false
+
+# =====================================================
+# 隐私与安全建议：
+# 1. 不在配置文件中保存任何节点密码或明文密钥。
+# 2. 使用 DoH/DoQ 以防 DNS 泄漏，已默认启用。
+# 3. sni-sniffing 已关闭，防止 SNI 明文泄露。
+# 4. 已禁用 IPv6，防止未代理流量从 IPv6 出口泄露。
+# 5. 推荐仅保留少量必要插件，避免额外开销与潜在隐私风险。
+# =====================================================
